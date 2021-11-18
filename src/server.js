@@ -4,7 +4,11 @@ const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
 const fs = require('fs');
-var rfs = require('rotating-file-stream') // version 2.x
+const path = require('path');
+const rfs = require('rotating-file-stream'); // version 2.x
+const request = require('request');
+
+require('dotenv').config()
 
 // defining the Express app
 const app = express();
@@ -25,12 +29,43 @@ var accessLogStream = rfs.createStream('access.log', {
 })
 
 // setup the logger
-app.use(morgan('combined', { stream: accessLogStream }))
+app.use(morgan('combined', {stream: accessLogStream}))
 
 
 app.get('/test', (req, res) => {
     res.send("UP");
 });
+
+lookup_table = JSON.parse(Buffer.from(process.env.LOOKUP, 'base64').toString('utf-8'));
+
+app.get('/v1/disposable/:event', (req, res) => {
+    let event = req.params.event;
+    if (lookup_table.hasOwnProperty(event)) {
+        const options = {
+            method: 'POST',
+            url: 'https://api.calendly.com/scheduling_links',
+            headers: {
+                'Content-Type': 'application/json',
+                Authorization: 'Bearer ' + process.env.TOKEN
+            },
+            body: {
+                max_event_count: 1,
+                owner: 'https://api.calendly.com/event_types/' + lookup_table[event],
+                owner_type: 'EventType'
+            },
+            json: true
+        };
+
+        request(options, function (error, response, body) {
+            if (error) throw new Error(error);
+
+            res.send(body["resource"]["booking_url"])
+        });
+    } else {
+        res.send("INVALID");
+    }
+
+})
 
 // starting the server
 app.listen(3001, () => {
