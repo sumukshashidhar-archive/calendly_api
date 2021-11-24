@@ -6,7 +6,6 @@ const morgan = require('morgan');
 const fs = require('fs');
 const path = require('path');
 const rfs = require('rotating-file-stream'); // version 2.x
-const request = require('request');
 
 const getEventList = require('./controllers/getEventList');
 const getDisposableLink = require('./controllers/getDisposableLink');
@@ -56,5 +55,5 @@ app.get('/v1/disposable/:event', async (req, res) => {
 
 // starting the server
 app.listen(process.env.PORT, () => {
-    console.log('listening on port' + process.env.PORT);
+    console.log('listening on port ' + process.env.PORT);
 });
