@@ -8,6 +8,8 @@ const path = require('path');
 const rfs = require('rotating-file-stream'); // version 2.x
 const request = require('request');
 
+const getEventList = require('./controllers/getEventList');
+const getDisposableLink = require('./controllers/getDisposableLink');
 require('dotenv').config()
 
 // defining the Express app
@@ -32,38 +34,23 @@ var accessLogStream = rfs.createStream('access.log', {
 app.use(morgan('combined', {stream: accessLogStream}))
 
 
-app.get('/test', (req, res) => {
+app.get('/v1/test', (req, res) => {
+    // to test if the endpoint is up and works as expected.
     res.send("UP");
 });
 
-lookup_table = JSON.parse(Buffer.from(process.env.LOOKUP, 'base64').toString('utf-8'));
+app.get('/v1/event_types', async (req, res) => {
+    // await the event list from the eventlist controller.
+    let event_list = await getEventList();
+    // send the event list to the client.
+    res.send(event_list);
+})
 
-app.get('/v1/disposable/:event', (req, res) => {
+app.get('/v1/disposable/:event', async (req, res) => {
+    // get the event slug that we want
     let event = req.params.event;
-    if (lookup_table.hasOwnProperty(event)) {
-        const options = {
-            method: 'POST',
-            url: 'https://api.calendly.com/scheduling_links',
-            headers: {
-                'Content-Type': 'application/json',
-                Authorization: 'Bearer ' + process.env.TOKEN
-            },
-            body: {
-                max_event_count: 1,
-                owner: 'https://api.calendly.com/event_types/' + lookup_table[event],
-                owner_type: 'EventType'
-            },
-            json: true
-        };
-
-        request(options, function (error, response, body) {
-            if (error) throw new Error(error);
-
-            res.send(body["resource"]["booking_url"])
-        });
-    } else {
-        res.send("INVALID");
-    }
+    let event_link = await getDisposableLink(event);
+    res.send(event_link);
 
 })
 
