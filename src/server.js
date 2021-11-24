@@ -33,19 +33,19 @@ var accessLogStream = rfs.createStream('access.log', {
 app.use(morgan('combined', {stream: accessLogStream}))
 
 
-app.get('/v1/test', (req, res) => {
+app.get('/calendly/v1/test', (req, res) => {
     // to test if the endpoint is up and works as expected.
     res.send("UP");
 });
 
-app.get('/v1/event_types', async (req, res) => {
+app.get('/calendly/v1/event_types', async (req, res) => {
     // await the event list from the eventlist controller.
     let event_list = await getEventList();
     // send the event list to the client.
     res.send(event_list);
 })
 
-app.get('/v1/disposable/:event', async (req, res) => {
+app.get('/calendly/v1/disposable/:event', async (req, res) => {
     // get the event slug that we want
     let event = req.params.event;
     let event_link = await getDisposableLink(event);
