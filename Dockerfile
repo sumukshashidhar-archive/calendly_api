@@ -6,8 +6,8 @@ COPY package*.json ./
 
 RUN npm install
 
-COPY .. .
+COPY src/ .
 
 EXPOSE 1234
 
-CMD ["cd", "src", "&&", "node", "server"]
+CMD ["node", "server"]
